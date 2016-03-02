@@ -55,6 +55,9 @@ public class ArticleListActivity extends AppCompatActivity implements
         if (BuildConfig.DEBUG) {
             Timber.v("onCreate(Bundle savedInstanceState)");
         }
+
+        //TODO: convert this activity into an Activity that calls a Fragment
+        //TODO: create new layout for Fragment
         setContentView(R.layout.activity_article_list);
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
