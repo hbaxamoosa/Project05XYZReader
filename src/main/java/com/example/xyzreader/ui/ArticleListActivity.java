@@ -18,13 +18,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.xyzreader.BuildConfig;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
-import com.example.xyzreader.data.ItemsContract;
 import com.example.xyzreader.data.UpdaterService;
 
-import timber.log.Timber;
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
 /**
  * An activity representing a list of Articles. This activity has different presentations for
@@ -32,12 +31,14 @@ import timber.log.Timber;
  * touched, lead to a {@link ArticleDetailActivity} representing item details. On tablets, the
  * activity presents a grid of items as cards.
  */
-public class ArticleListActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<Cursor> {
+public class ArticleListActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private Toolbar mToolbar;
-    private SwipeRefreshLayout mSwipeRefreshLayout;
-    private RecyclerView mRecyclerView;
+    @Bind(R.id.toolbar)
+    Toolbar mToolbar;
+    @Bind(R.id.swipe_refresh_layout)
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    @Bind(R.id.recycler_view)
+    RecyclerView mRecyclerView;
     private boolean mIsRefreshing = false;
     private BroadcastReceiver mRefreshingReceiver = new BroadcastReceiver() {
         @Override
@@ -52,22 +53,9 @@ public class ArticleListActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (BuildConfig.DEBUG) {
-            Timber.v("onCreate(Bundle savedInstanceState)");
-        }
-
-        //TODO: convert this activity into an Activity that calls a Fragment
-        //TODO: create new layout for Fragment
         setContentView(R.layout.activity_article_list);
+        ButterKnife.bind(this);
 
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-
-
-        final View toolbarContainerView = findViewById(R.id.toolbar_container);
-
-        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
-
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         getLoaderManager().initLoader(0, null, this);
 
         if (savedInstanceState == null) {
@@ -103,12 +91,12 @@ public class ArticleListActivity extends AppCompatActivity implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        ArticleListAdapter mArticleListAdapter = new ArticleListAdapter(cursor);
-        mArticleListAdapter.setHasStableIds(true);
-        mRecyclerView.setAdapter(mArticleListAdapter);
+        Adapter adapter = new Adapter(cursor);
+        adapter.setHasStableIds(true);
+        mRecyclerView.setAdapter(adapter);
+
         int columnCount = getResources().getInteger(R.integer.list_column_count);
-        StaggeredGridLayoutManager sglm =
-                new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
+        StaggeredGridLayoutManager sglm = new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(sglm);
     }
 
@@ -130,10 +118,10 @@ public class ArticleListActivity extends AppCompatActivity implements
         }
     }
 
-    private class ArticleListAdapter extends RecyclerView.Adapter<ViewHolder> {
+    private class Adapter extends RecyclerView.Adapter<ViewHolder> {
         private Cursor mCursor;
 
-        public ArticleListAdapter(Cursor cursor) {
+        public Adapter(Cursor cursor) {
             mCursor = cursor;
         }
 
@@ -150,8 +138,9 @@ public class ArticleListActivity extends AppCompatActivity implements
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    Intent intent = new Intent(ArticleListActivity.this, ArticleDetailActivity.class);
+                    intent.putExtra("selected_index", vh.getAdapterPosition());
+                    startActivity(intent);
                 }
             });
             return vh;
